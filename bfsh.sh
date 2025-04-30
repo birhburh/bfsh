@@ -4,6 +4,7 @@
 # https://community.hpe.com/t5/operating-system-hp-ux/reading-a-single-character-then-what/td-p/2880639
 
 exit=0
+input=""
 command_end=1
 while true; do
 	stty -echo
@@ -15,22 +16,22 @@ while true; do
 	fi
 
 	readchar=$(dd if=$(tty) bs=1 count=1 2>/dev/null)
-	# echo -n "$readchar" | xxd
-	# printf "%d" "\"$readchar"
-	if [ $(printf '%02x' "\"$readchar") = "03" ] || [ $(printf '%02x' "\"$readchar") = "04" ]; then
+	hexchar=$(printf '%02x' "\"$readchar")
+	# printf "|$hexchar|: "
+	if [ $hexchar = "03" ] || [ $hexchar = "04" ]; then
 		exit=1
-	elif [ $(printf '%02x' "\"$readchar") = "0d" ]; then
+	elif [ $hexchar = "0d" ]; then
 		stty -raw
 		command_end=1
 		printf "\n"
-	elif [ $(printf '%02x' "\"$readchar") = "09" ]; then
+	elif [ $hexchar = "7f" ]; then
 		stty -raw
 		stty sane
-		printf "\b \b"
+		stty erase "^H"
+		printf "\b\033[0J"
 	else
 		stty -raw
 		printf "$readchar"
-		# echo "$readchar" | head -c1 | xxd
 	fi
 	stty -raw
 	stty sane
